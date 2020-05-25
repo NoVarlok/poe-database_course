@@ -13,6 +13,9 @@ f = open('query.txt')
 init_query = [line.strip() for line in f]
 query = '\n'.join(init_query)
 f.close()
+f = open('key.txt')
+root_login, root_password = [line.strip() for line in f]
+f.close()
 character_head_format = '{: <16}|{: <4}|{: <6}|{: <13}|{: <13}|{: <23}'
 character_sep = '{:-<16}+{:-<4}+{:-<6}+{:-<13}+{:-<13}+{:-<23}'.format('', '', '', '', '', '')
 ascendancy_head_format = '{: <13}|{: <23}|{: <16}|{: <16}|{: <11}'
@@ -115,7 +118,7 @@ def sql_init_database(cursor, db_name: str, user: str, query):
 
 
 def sql_create_database(user: str, password: str, db_name: str, query):
-    conn = psycopg2.connect(user='postgres', password='1111', host='localhost')
+    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
     conn.autocommit = True
     cursor = conn.cursor()
     cursor.execute('drop database if exists {0};'.format(db_name))
@@ -123,7 +126,7 @@ def sql_create_database(user: str, password: str, db_name: str, query):
     # cursor.execute('GRANT ALL PRIVILEGES ON {0} to {1};'.format(db_name, user))
     cursor.close()
     conn.close()
-    conn = psycopg2.connect(user='postgres', password='1111', host='localhost', dbname=db_name)
+    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost', dbname=db_name)
     conn.autocommit = True
     cursor = conn.cursor()
     sql_init_database(cursor, db_name, user, query)
@@ -136,7 +139,7 @@ def sql_create_database(user: str, password: str, db_name: str, query):
 
 
 def sql_delete_database(db_name: str):
-    conn = psycopg2.connect(user='postgres', password='1111', host='localhost')
+    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
     conn.autocommit = True
     cursor = conn.cursor()
     cursor.execute('drop database if exists {0};'.format(db_name))
