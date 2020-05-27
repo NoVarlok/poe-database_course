@@ -1,29 +1,3 @@
-drop table if exists ascendancy_table cascade;
-drop table if exists character_table;
-
-create table ascendancy_table(
-	ascendancy_id smallint primary key,
-	ascendancy varchar(20) unique not null,
-	base_class varchar(15) not null,
-	specialization varchar(15) not null,
-	ascendancy_popularity integer default 0
-);
-
-create table character_table(
-	name varchar(15) primary key,
-	lvl smallint not null check(lvl > 0 and lvl <= 100),
-	life integer not null check(life > 0),
-	energy_shield integer not null check(energy_shield >= 0),
-	ascendancy_id smallint not null references ascendancy_table on delete cascade,
-	main_skill varchar(20) not null
-);
-
-begin;
-CREATE INDEX base_class_index
-    ON ascendancy_table USING btree
-    (base_class ASC NULLS LAST);
-end;
-
 create or replace function calc_ascendancy_popularity() returns trigger as $$
 begin
 if (TG_OP = 'DELETE') then

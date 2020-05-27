@@ -9,13 +9,23 @@ from psycopg2 import Error
 
 conn = None
 cursor = None
-f = open('query.txt')
-init_query = [line.strip() for line in f]
-query = '\n'.join(init_query)
-f.close()
-f = open('key.txt')
-root_login, root_password = [line.strip() for line in f]
-f.close()
+
+try:
+    f = open('query.txt')
+    init_query = [line.strip() for line in f]
+    query = '\n'.join(init_query)
+    f.close()
+except Exception as e:
+    mb.showerror("Ошибка", "Не удалось загрузить скрипт для инициализации базы данных")
+    exit(1)
+try:
+    f = open('key.txt')
+    root_login, root_password = [line.strip() for line in f]
+    f.close()
+except Exception as e:
+    mb.showerror("Ошибка", "Не удалось загрузить данные для подключения к базе данных")
+    exit(1)
+
 character_head_format = '{: <16}|{: <4}|{: <6}|{: <13}|{: <13}|{: <23}'
 character_sep = '{:-<16}+{:-<4}+{:-<6}+{:-<13}+{:-<13}+{:-<23}'.format('', '', '', '', '', '')
 ascendancy_head_format = '{: <13}|{: <23}|{: <16}|{: <16}|{: <11}'
@@ -114,27 +124,27 @@ def sql_update_character_table(name: str, lvl: int, life: int, energy_shield: in
 
 def sql_init_database(cursor, db_name: str, user: str, query):
     cursor.execute(query)
-    cursor.execute('grant all privileges on all tables in schema public to {0};'.format(user))
+    # print('grant all privileges on all tables in schema public to {0};'.format(user))
+    # cursor.execute('grant all privileges on all tables in schema public to {0};'.format(user))
 
 
 def sql_create_database(user: str, password: str, db_name: str, query):
     conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
     conn.autocommit = True
     cursor = conn.cursor()
-    cursor.execute('drop database if exists {0};'.format(db_name))
-    cursor.execute('create database {0};'.format(db_name))
-    # cursor.execute('GRANT ALL PRIVILEGES ON {0} to {1};'.format(db_name, user))
+    cursor.execute("select f_create_db('{0}', '{1}');".format(db_name, user))
     cursor.close()
     conn.close()
-    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost', dbname=db_name)
-    conn.autocommit = True
-    cursor = conn.cursor()
-    sql_init_database(cursor, db_name, user, query)
-    cursor.close()
-    conn.close()
+    # conn = psycopg2.connect(user=root_login, password=root_password, host='localhost', dbname=db_name)
+    # conn.autocommit = True
+    # cursor = conn.cursor()
+    # sql_init_database(cursor, db_name, user, query)
+    # cursor.close()
+    # conn.close()
     conn = psycopg2.connect(user=user, password=password, host='localhost', dbname=db_name)
     conn.autocommit = True
     cursor = conn.cursor()
+    sql_init_database(cursor, db_name, user, query)
     return conn, cursor
 
 
@@ -142,7 +152,8 @@ def sql_delete_database(db_name: str):
     conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
     conn.autocommit = True
     cursor = conn.cursor()
-    cursor.execute('drop database if exists {0};'.format(db_name))
+    # cursor.execute('drop database if exists {0};'.format(db_name))
+    cursor.execute("select f_delete_db('{0}')".format(db_name))
     cursor.close()
     conn.close()
 ##################################################################################################
@@ -186,7 +197,7 @@ def create_database():
                 conn = None
             conn, cursor = sql_create_database(user=login.get(), password=password.get(), db_name=db_name.get(), query=query)
         except Error as e:
-            mb.showerror("Ошибка", "Не удалось подключиться")
+            mb.showerror("Ошибка", e.args[0])
             return
         except EXCEPTION:
             mb.showerror("Ошибка", "Не удалось подключиться")
@@ -214,11 +225,19 @@ def delete_database():
     def function():
         global conn, cursor
         try:
+            if cursor is not None:
+                cursor.close()
+                cursor = None
+            if conn is not None:
+                conn.close()
+                conn = None
             sql_delete_database(db_name=db_name.get())
-        except Error:
-            mb.showerror("Ошибка", "Не удалось подключиться")
+        except Error as e:
+            cursor = conn = None
+            mb.showerror("Ошибка", e.args[0])
             return
-        except EXCEPTION:
+        except EXCEPTION as e:
+            cursor = conn = None
             mb.showerror("Ошибка", "Не удалось подключиться")
             return
         conn = None
