@@ -1,2 +1,2 @@
-postgres
-1111
+lab_user
+lab_user

@@ -121,6 +121,14 @@ delete from character_table where character_table.main_skill = delete_main_skill
 end;
 $$;
 
+create or replace procedure delete_by_base_class(delete_base_class text)
+language plpgsql
+as $$
+begin
+delete from ascendancy_table where ascendancy_table.base_class = delete_base_class;
+end;
+$$;
+
 create or replace procedure delete_character(character_name text)
 language plpgsql
 as $$

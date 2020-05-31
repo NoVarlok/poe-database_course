@@ -20,7 +20,7 @@ except Exception as e:
     exit(1)
 try:
     f = open('key.txt')
-    root_login, root_password = [line.strip() for line in f]
+    adm_login, adm_password = [line.strip() for line in f]
     f.close()
 except Exception as e:
     mb.showerror("Ошибка", "Не удалось загрузить данные для подключения к базе данных")
@@ -129,13 +129,13 @@ def sql_init_database(cursor, db_name: str, user: str, query):
 
 
 def sql_create_database(user: str, password: str, db_name: str, query):
-    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
+    conn = psycopg2.connect(user=adm_login, password=adm_password, host='localhost', dbname='source_db')
     conn.autocommit = True
     cursor = conn.cursor()
     cursor.execute("select f_create_db('{0}', '{1}');".format(db_name, user))
     cursor.close()
     conn.close()
-    # conn = psycopg2.connect(user=root_login, password=root_password, host='localhost', dbname=db_name)
+    # conn = psycopg2.connect(user=adm_login, password=adm_password, host='localhost', dbname=db_name)
     # conn.autocommit = True
     # cursor = conn.cursor()
     # sql_init_database(cursor, db_name, user, query)
@@ -149,7 +149,7 @@ def sql_create_database(user: str, password: str, db_name: str, query):
 
 
 def sql_delete_database(db_name: str):
-    conn = psycopg2.connect(user=root_login, password=root_password, host='localhost')
+    conn = psycopg2.connect(user=adm_login, password=adm_password, host='localhost', dbname='source_db')
     conn.autocommit = True
     cursor = conn.cursor()
     # cursor.execute('drop database if exists {0};'.format(db_name))
@@ -595,7 +595,7 @@ def delete_ascendancy_by_base_class():
         try:
             sql_delete_by_base_class(base_class.get())
             show_character_table()
-            show_character_table()
+            show_ascendancy_table()
         except Error as e:
             mb.showerror("Ошибка", e.args[0])
             return
@@ -624,7 +624,7 @@ def delete_character():
         try:
             sql_delete_character(name.get())
             show_character_table()
-            show_character_table()
+            show_ascendancy_table()
         except Error as e:
             mb.showerror("Ошибка", e.args[0])
             return
@@ -653,7 +653,7 @@ def delete_ascendancy():
         try:
             sql_delete_ascendancy(ascendancyId.get())
             show_character_table()
-            show_character_table()
+            show_ascendancy_table()
         except Error as e:
             mb.showerror("Ошибка", e.args[0])
             return
@@ -663,6 +663,13 @@ def delete_ascendancy():
 
     button = Button(window, text='Удалить', command=function)
     button.grid(row=2, column=0)
+
+
+def clear_tables():
+    clear_character_table()
+    clear_ascendancy_table()
+    show_character_table()
+    show_ascendancy_table()
 
 
 root = Tk()
@@ -675,6 +682,7 @@ database_menu = Menu(main_menu, tearoff=0)
 main_menu.add_cascade(label='Действия в базой данных', menu=database_menu)
 database_menu.add_command(label='Создать базу данных', command=create_database)
 database_menu.add_command(label='Удалить дазу данных', command=delete_database)
+database_menu.add_command(label='Очистить таблицы', command=clear_tables)
 
 character_database_menu = Menu(main_menu, tearoff=0)
 main_menu.add_cascade(label='Персонажи', menu=character_database_menu)
