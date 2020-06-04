@@ -9,12 +9,12 @@ IF EXISTS (SELECT 1 FROM pg_database WHERE datname = dbname) THEN
    RAISE EXCEPTION 'Database already exists'; 
    return 0;
 ELSE
-   PERFORM dblink_exec('user=postgres password=1111 dbname=' || current_database()   -- current db
+   PERFORM dblink_exec('user=lab_user password=lab_user dbname=' || current_database()   -- current db
                      , 'CREATE DATABASE ' || quote_ident(dbname));
-	perform dblink_exec('user=postgres password=1111 dbname=' || quote_ident(dbname)
+	perform dblink_exec('user=lab_user password=lab_user dbname=' || quote_ident(dbname)
                      , 'create table ascendancy_table(
 							ascendancy_id smallint primary key,
-							ascendancy varchar(20) unique not null,
+							ascendancy varchar(20) not null,
 							base_class varchar(15) not null,
 							specialization varchar(15) not null,
 							ascendancy_popularity integer default 0
@@ -40,7 +40,7 @@ ELSE
 							(main_skill ASC NULLS LAST);
 						end;'
 					   );
-	perform dblink_exec('user=postgres password=1111 dbname=' || quote_ident(dbname)   -- current db
+	perform dblink_exec('user=lab_user password=lab_user dbname=' || quote_ident(dbname)   -- current db
 				, format('grant all privileges on all tables in schema public to %I;', username)
 					);				   
 END IF;
@@ -53,7 +53,7 @@ CREATE OR REPLACE FUNCTION f_delete_db(dbname text)
   RETURNS integer AS
 $func$
 BEGIN
-	perform dblink_exec('user=postgres password=1111 dbname=postgres'
+	perform dblink_exec('user=lab_user password=lab_user dbname=source_db'
 				, format('drop database if exists %I;', dbname)
 					);				   
 return 1;
